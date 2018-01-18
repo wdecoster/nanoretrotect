@@ -19,7 +19,8 @@ def main():
     plot_retrotect(df=merged_df,
                    path=path.join(args.outdir, args.prefix),
                    figformat=args.format,
-                   title=args.title)
+                   title=args.title,
+                   hours=args.hours)
 
 
 def get_args():
@@ -64,6 +65,10 @@ def get_args():
                         help="Add a title to all plots, requires quoting if using spaces",
                         type=str,
                         default=None)
+    visual.add_argument("--hours",
+                        help="How many hours to plot in the graph",
+                        type=int,
+                        default=8)
     target = parser.add_argument_group(
         title="Input data sources, requires a bam and a summary file.")
     target.add_argument("--summary",
@@ -78,12 +83,13 @@ def get_args():
     return args
 
 
-def plot_retrotect(df, path, figformat="png", title=None):
+def plot_retrotect(df, path, figformat="png", title=None, hours=8):
     dfs_sparse = check_valid_time_and_sort(
         df=df.sample(min(20000, len(df.index))),
         timescol="start_time",
-        days=2)
-    dfs_sparse["start_time"] = dfs_sparse["start_time"].astype('timedelta64[s]')  # ?! dtype float64
+        days=hours / 24,
+        warning=False)
+    dfs_sparse["start_time"] = dfs_sparse["start_time"].astype('timedelta64[m]')  # ?! dtype float64
 
     cum_yield_reads = Plot(
         path=path + "CumulativeYieldPlot_NumberOfReads." + figformat,
@@ -107,15 +113,12 @@ def plot_retrotect(df, path, figformat="png", title=None):
         color="red",
         scatter_kws={"s": 1},
         ax=ax)
-    yticks = [10**i for i in range(10) if not 10**i > 10 * dfs_sparse["index"]]
-    xticks = [int(i) for i in range(0, 168, 4) if not i > (dfs_sparse["start_time"].max() / 3600)]
+    yticks = [10**i for i in range(10) if not 10**i > 10 * dfs_sparse["index"].max()]
     ax.set(
-        xticks=[i * 3600 for i in xticks],
-        xticklabels=xticks,
-        xlabel='Run time (hours)',
+        xlabel='Run time (minutes)',
         yticks=np.log10(yticks),
         yticklabels=yticks,
-        ylabel='Cumulative yield in number of reads',
+        ylabel='Cumulative yield in log transformed number of reads',
         title=title or cum_yield_reads.title)
     fig = ax.get_figure()
     cum_yield_reads.fig = fig
