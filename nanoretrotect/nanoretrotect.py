@@ -6,6 +6,7 @@ from nanoplotter import check_valid_time_and_sort, Plot
 from os import path
 import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def main():
@@ -83,36 +84,37 @@ def plot_retrotect(df, path, figformat="png", title=None):
         timescol="start_time",
         days=2)
     dfs_sparse["start_time"] = dfs_sparse["start_time"].astype('timedelta64[s]')  # ?! dtype float64
-    maxtime = dfs_sparse["start_time"].max()
-    ticks = [int(i) for i in range(0, 168, 4) if not i > (maxtime / 3600)]
+
     cum_yield_reads = Plot(
         path=path + "CumulativeYieldPlot_NumberOfReads." + figformat,
         title="Cumulative yield")
     ax = sns.regplot(
-        x='start_time',
-        y="index",
-        data=dfs_sparse,
+        x=dfs_sparse['start_time'],
+        y=np.log10(dfs_sparse['index'] + 1),
         x_ci=None,
         fit_reg=False,
         color="blue",
-        scatter_kws={"s": 3})
+        scatter_kws={"s": 1})
     aligned_df = dfs_sparse.drop('index', axis=1) \
         .dropna(axis="index", how="any") \
         .reset_index(drop=True) \
         .reset_index()
     ax = sns.regplot(
-        x='start_time',
-        y="index",
-        data=aligned_df,
+        x=aligned_df['start_time'],
+        y=np.log10(aligned_df["index"] + 1),
         x_ci=None,
         fit_reg=False,
         color="red",
-        scatter_kws={"s": 3},
+        scatter_kws={"s": 1},
         ax=ax)
+    yticks = [10**i for i in range(10) if not 10**i > 10 * dfs_sparse["index"]]
+    xticks = [int(i) for i in range(0, 168, 4) if not i > (dfs_sparse["start_time"].max() / 3600)]
     ax.set(
-        xticks=[i * 3600 for i in ticks],
-        xticklabels=ticks,
+        xticks=[i * 3600 for i in xticks],
+        xticklabels=xticks,
         xlabel='Run time (hours)',
+        yticks=np.log10(yticks),
+        yticklabels=yticks,
         ylabel='Cumulative yield in number of reads',
         title=title or cum_yield_reads.title)
     fig = ax.get_figure()
