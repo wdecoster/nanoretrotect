@@ -32,7 +32,8 @@ setup(
     keywords='',
     python_requires='>=3',
     packages=find_packages(),  # + ['scripts'],
-    install_requires=['pandas', 'numpy', 'NanoPlot>=0.19.1', 'nanoget>=1.3.0'],
+    install_requires=['pandas', 'numpy', 'NanoPlot>=0.19.1',
+                      'nanoget>=1.3.0', 'nanoplotter>=0.30.1'],
     package_dir={'nanoretrotect': 'nanoretrotect'},
     entry_points={
         'console_scripts': [
