@@ -90,24 +90,24 @@ def get_args():
 
 
 def plot_retrotect(df, path, figformat="png", title=None, hours=8):
-    dfs_sparse = check_valid_time_and_sort(
-        df=df.sample(min(20000, len(df.index))),
+    dfs = check_valid_time_and_sort(
+        df=df,
         timescol="start_time",
         days=hours / 24,
         warning=False)
-    dfs_sparse["start_time"] = dfs_sparse["start_time"].astype('timedelta64[m]')  # ?! dtype float64
+    dfs["start_time"] = dfs["start_time"].astype('timedelta64[m]')  # ?! dtype float64
 
     cum_yield_reads = Plot(
         path=path + "CumulativeYieldPlot_NumberOfReads." + figformat,
         title="Cumulative yield")
     ax = sns.regplot(
-        x=dfs_sparse['start_time'],
-        y=np.log10(dfs_sparse['index'] + 1),
+        x=dfs['start_time'],
+        y=np.log10(dfs['index'] + 1),
         x_ci=None,
         fit_reg=False,
         color="blue",
         scatter_kws={"s": 1})
-    aligned_df = dfs_sparse.drop('index', axis=1) \
+    aligned_df = dfs.drop('index', axis=1) \
         .dropna(axis="index", how="any") \
         .reset_index(drop=True) \
         .reset_index()
@@ -119,7 +119,7 @@ def plot_retrotect(df, path, figformat="png", title=None, hours=8):
         color="red",
         scatter_kws={"s": 1},
         ax=ax)
-    yticks = [10**i for i in range(10) if not 10**i > 10 * dfs_sparse["index"].max()]
+    yticks = [10**i for i in range(10) if not 10**i > 10 * dfs["index"].max()]
     ax.set(
         xlabel='Run time (minutes)',
         yticks=np.log10(yticks),
